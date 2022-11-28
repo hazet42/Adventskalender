@@ -1,7 +1,9 @@
 #include <CheapStepper.h>
 #include <arduino-timer.h>
 
-CheapStepper stepper; 
+// Define the two steppers on different pins:
+CheapStepper stepperX (8,9,10,11); 
+CheapStepper stepperY (2,3,4,5);
 //Richtungszuweisung des Motors 
 boolean moveClockwise = true;
 int tag = 1;
@@ -35,9 +37,9 @@ void loop() {
   if (val == 1) { // test for command 1 then turn on LED
     for (int s=0; s<4096; s++){
       //Eine volle Umdrehung beinhaltet 4096 Schritte
-      stepper.step(moveClockwise);
+      stepperX.step(moveClockwise);
       //Ausgabe der aktuellen Motorposition in der Konsole
-      int nStep = stepper.getStep(); 
+      int nStep = stepperX.getStep(); 
       if (nStep%64==0)
       {    
         Serial.print("current step position: "); Serial.print(nStep);
