@@ -11,10 +11,12 @@ int tag = 1;
 int position = 0;
 int XOffset = 0;
 int YOffset = 0;
+byte lb = 0;
+byte hb = 0;
 int XPos = 0;
 int YPos = 0;
-int AdventX[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,};
-int AdventY[24] = {0, 10, 20, 30, 40, 50, 100, 200, 300, 500, 1000, 1500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,};
+int AdventX[25] = {4075, 4075, 4090, 10,   3,    4075, 4075, 4075, 4070, 4076, 4063, 4063, 5,   35, 10, 4068, 4068,    5, 4075, 4075, 4075, 4077, 4085, 0, 0};
+int AdventY[25] = {0,    4030, 3750, 3850, 3800,   10,   40, 4020, 3950, 4060,   60,   68, 0, 3750, 18, 3880,  320, 3880, 3970, 4050,   20,   37, 3800, 0, 0};
 
 auto timer = timer_create_default(); // create a timer with default settings
 
@@ -24,11 +26,17 @@ bool move_mirrors(void *) {
   
     position = AdventX[tag];
     stepperX.moveTo (moveClockwise, OffsetPositionX(position));
-    EEPROM.write(0,position);
+        lb = lowByte(position);
+        hb = highByte(position);
+        EEPROM.write(0,lb); 
+        EEPROM.write(1,hb);
 
     position = AdventY[tag];
     stepperY.moveTo (moveClockwise, OffsetPositionY(position));
-    EEPROM.write(1,position);
+        lb = lowByte(position);
+        hb = highByte(position);
+        EEPROM.write(2,lb);
+        EEPROM.write(3,hb);
 
     Serial.print("Es ist der "); Serial.print(tag); Serial.println(". Dezember");
     Serial.print("Die Spiegel stehen auf X: "); Serial.print(OffsetPositionX(position));
@@ -82,8 +90,8 @@ void setup() {
   timer.every(86400000, move_mirrors);
 
   // Lese Positionen der Spiegel seit letztem Power-Off aus dem EEPROM
-  XOffset = EEPROM.read(0) - stepperX.getStep();
-  YOffset = EEPROM.read(1) - stepperY.getStep();
+  XOffset = EEPROM.read(1)*256 + EEPROM.read(0) - stepperX.getStep();
+  YOffset = EEPROM.read(3)*256 + EEPROM.read(2) - stepperY.getStep();
 }
 
 void loop() {
@@ -98,16 +106,29 @@ void loop() {
   if (val == 1) { // set current position to offset 0
         position = stepperX.getStep();
         XOffset = position;
-        EEPROM.write(0,position);
+        lb = lowByte(position);
+        hb = highByte(position);
+        EEPROM.write(0,lb); 
+        EEPROM.write(1,hb);
         position = stepperY.getStep();
         YOffset = position;
-        EEPROM.write(1,position);
+        lb = lowByte(position);
+        hb = highByte(position);
+        EEPROM.write(2,lb);
+        EEPROM.write(3,hb);
         Serial.println("Current step position set to reference (0;0) ");
      }
   
   else if (val == 0) // test for command 0 then turn off LED
-  {  
-    //nothing
+  { 
+    position = 4075;
+    lb = lowByte(position);
+    hb = highByte(position);
+    EEPROM.write(0,lb); 
+    EEPROM.write(1,hb);
+    EEPROM.write(2,0);
+    EEPROM.write(3,0);
+    Serial.println("Reset EEPROM. ");
   }
 
   else if (val == 2) // test for command 2 adjust "tag"
@@ -129,7 +150,10 @@ void loop() {
     position = Serial.parseInt();
     stepperX.moveTo (moveClockwise, OffsetPositionX(position));
     delay(1000);
-    EEPROM.write(0,position);
+     lb = lowByte(position);
+     hb = highByte(position);
+     EEPROM.write(0,lb); 
+     EEPROM.write(1,hb);
     stepperX.off();
   }
 
@@ -143,7 +167,10 @@ void loop() {
     Serial.print("Moving to: "); Serial.println(OffsetPositionY(position));
     stepperY.moveTo (moveClockwise, OffsetPositionY(position));
     delay(1000);
-    EEPROM.write(1,position);
+    lb = lowByte(position);
+    hb = highByte(position);
+    EEPROM.write(2,lb);
+    EEPROM.write(3,hb);
     stepperY.off();
   }
 
@@ -161,7 +188,7 @@ void loop() {
 
   else if (val == 6) // fast forward
   {
-    for (int i=1; i<25; i++) {
+    for (int i=1; i<26; i++) {
 
       Serial.print("Es ist der "); Serial.print(i); Serial.println(". Dezember");
 
